@@ -8,7 +8,7 @@ from pymongo import MongoClient
 app = FastAPI()
 
 # app.mount("/static", StaticFiles(directory="static"), name="static")
-client = MongoClient("mongodb+srv://prath123:prath3132@mycluster1.ritxzre.mongodb.net")
+client = MongoClient("mongodb+srv://username:password@mycluster1.ritxzre.mongodb.net")
 
 # db = conn.get_database("items")
 # student_collection = db.get_collection("items")
@@ -39,4 +39,8 @@ async def get_form(request: Request):
 async def submit_form(name: str = Form(...), quantity: int = Form(...), price = Form(...)):
     product = {"name": name, "quantity": quantity, "price": price}
     collection.insert_one(product)
+<<<<<<< HEAD
     return RedirectResponse(url="/")
+=======
+    return RedirectResponse(url="/")
+>>>>>>> 5d8dc8e7a2ba591051038b43133ec9f056cbb94f
