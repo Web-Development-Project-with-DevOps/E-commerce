@@ -39,4 +39,4 @@ async def get_form(request: Request):
 async def submit_form(name: str = Form(...), quantity: int = Form(...), price = Form(...)):
     product = {"name": name, "quantity": quantity, "price": price}
     collection.insert_one(product)
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/")
