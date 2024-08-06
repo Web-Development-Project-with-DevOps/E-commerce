@@ -19,6 +19,44 @@ app.add_middleware(
 )
 
 
+@app.post("/register")
+def register_user(user: UserRegister):
+    try:
+        if db['users'].find_one({"email": user.email}):
+            raise HTTPException(status_code=400, detail="Email already registered")
+        if db['users'].find_one({"username": user.username}):
+            raise HTTPException(status_code=400, detail="Username already taken")
+
+        user_data = {
+            "username": user.username,
+            "email": user.email,
+            "password": user.password,
+            "created_on": datetime.now()
+        }
+        result = db['users'].insert_one(user_data)
+
+        return {"msg": "User registered successfully", "user_id": str(result.inserted_id)}
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error registering user: {str(e)}")
+
+
+@app.post("/login")
+def login_user(user: UserRegister):
+    try:
+        # Find the user in the database by email
+        user_data = db['users'].find_one({"email": user.email})
+        if user_data and user_data['password'] == user.password:
+            return {"message": "Login successful", "user_id": str(user_data['_id'])}
+        else:
+            raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    except HTTPException as e:
+        raise e  # Reraise the same HTTPException
+    except Exception as e:
+        # Handle unexpected errors
+        raise HTTPException(status_code=500, detail="An error occurred during login") from e
+
+
 @app.get("/products")
 def list_products():
     try:
@@ -105,24 +143,3 @@ def get_order(order_id: str):
         raise HTTPException(status_code=404, detail="Order not found")
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving order: {str(e)}")
-
-
-@app.post("/register")
-def register_user(user: UserRegister):
-    try:
-        if db['users'].find_one({"email": user.email}):
-            raise HTTPException(status_code=400, detail="Email already registered")
-        if db['users'].find_one({"username": user.username}):
-            raise HTTPException(status_code=400, detail="Username already taken")
-
-        user_data = {
-            "username": user.username,
-            "email": user.email,
-            "password": user.password,
-            "created_on": datetime.now()
-        }
-        result = db['users'].insert_one(user_data)
-
-        return {"msg": "User registered successfully", "user_id": str(result.inserted_id)}
-    except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Error registering user: {str(e)}")
