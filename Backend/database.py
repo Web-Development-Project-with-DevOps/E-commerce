@@ -1,7 +1,10 @@
+import json
 from pymongo import MongoClient
 
-MONGO_URI = "mongodb+srv://prath123:prath3132@mycluster1.ritxzre.mongodb.net/"
+with open("config.json", "r") as config_file:
+    config = json.load(config_file)
+
+MONGO_URI = config['mongodb']['uri']
 
 client = MongoClient(MONGO_URI)
-
 db = client["ecommerce_db"]
