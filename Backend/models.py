@@ -4,8 +4,10 @@ from datetime import datetime
 
 
 class Item(BaseModel):
-    productId: str
-    boughtQuantity: int
+    user_id: Optional[str] = None
+    product_id: str
+    quantity: int
+    price: float
 
 
 class UserRegister(BaseModel):
@@ -26,9 +28,10 @@ class UserAddress(BaseModel):
 
 
 class Order(BaseModel):
+    user_id: Optional[str] = None
     createdOn: datetime = Field(default_factory=datetime.now)
     total_amount: float
-    user_name: PublicUserDetails
+    user_details: PublicUserDetails
     user_address: UserAddress
     items: List[Item]
     status: str
@@ -39,9 +42,3 @@ class Product(BaseModel):
     price: float
     quantity: int
     description: Optional[str] = None
-
-
-class CartItem(BaseModel):
-    user_id: str
-    product_id: str
-    quantity: int
