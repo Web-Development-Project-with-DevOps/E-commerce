@@ -16,6 +16,11 @@ class UserRegister(BaseModel):
     password: str
 
 
+class LoginUser(BaseModel):
+    email: str
+    password: str
+
+
 class PublicUserDetails(BaseModel):
     userName: str
     email: str
