@@ -1,12 +1,13 @@
-from fastapi import FastAPI, HTTPException, Cookie, Response, Depends
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
-from models import Product, Item, Order, UserRegister, LoginUser
+from models import Product, Item, OrderCreate, UserRegister, UserLogin, UserInDB
 from database import db
 from bson import ObjectId
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo.errors import PyMongoError
 import os
+from passlib.context import CryptContext
 
 app = FastAPI()
 
@@ -26,51 +27,45 @@ if not os.path.isdir(frontend_directory):
 
 app.mount("/static", StaticFiles(directory=frontend_directory), name="static")
 
-# Dependency to retrieve user_id from cookie
-def get_user_id_from_cookie(user_id: str = Cookie(None)):
-    if not user_id:
-        raise HTTPException(status_code=401, detail="User not logged in")
-    return user_id
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def serialize_document(doc):
+    if '_id' in doc:
+        doc['_id'] = str(doc['_id'])
+    return doc
 
 @app.post("/register")
 def register_user(user: UserRegister):
-    try:
-        if db['users'].find_one({"email": user.email}):
-            raise HTTPException(status_code=400, detail="Email already registered")
-        if db['users'].find_one({"userName": user.userName}):
-            raise HTTPException(status_code=400, detail="Username already taken")
+    existing_user = db['users'].find_one({"email": user.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
-        user_data = {
-            "userName": user.userName,
-            "email": user.email,
-            "password": user.password,  # Plaintext password (not recommended for production)
-            "created_on": datetime.now()
-        }
-        result = db['users'].insert_one(user_data)
-
-        return {"msg": "User registered successfully", "user_id": str(result.inserted_id)}
-    except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Error registering user: {str(e)}")
+    hashed_password = pwd_context.hash(user.password)
+    user_in_db = UserInDB(**user.dict(), hashed_password=hashed_password)
+    result = db['users'].insert_one(user_in_db.dict(exclude={"password"}))
+    
+    if result.inserted_id:
+        return {"message": "User registered successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Registration failed")
 
 @app.post("/login")
-def login_user(request: LoginUser, response: Response):
-    try:
-        user_data = db['users'].find_one({"email": request.email})
-        if not user_data or user_data['password'] != request.password:  # Plaintext password check
-            raise HTTPException(status_code=400, detail="Invalid email or password")
+def login_user(user: UserLogin):
+    user_in_db = db['users'].find_one({"email": user.email})
+    if not user_in_db:
+        raise HTTPException(status_code=400, detail="Invalid email or password")
 
-        # Set cookie with user_id
-        response.set_cookie(key="user_id", value=str(user_data['_id']), httponly=True)
-        return {"message": "Login successful"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="An error occurred during login") from e
+    if not pwd_context.verify(user.password, user_in_db['hashed_password']):
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    return {"message": "Login successful", "user_id": str(user_in_db["_id"])}
 
 @app.post("/products")
 def create_product(product: Product):
     try:
         product_dict = product.dict()
         result = db['products'].insert_one(product_dict)
-        return {"product_id": str(result.inserted_id)}
+        return {"product_name": product.product_name}
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error creating product: {str(e)}")
 
@@ -80,98 +75,118 @@ def list_products():
         products = db['products'].find()
         products_list = []
         for product in products:
-            product['_id'] = str(product['_id'])  # Convert ObjectId to string
+            product['_id'] = str(product['_id'])
             products_list.append(product)
         return products_list
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error listing products: {str(e)}")
 
-@app.get("/products/{product_id}", response_model=Product)
-def get_product(product_id: str):
+@app.get("/products/name/{product_name}", response_model=Product)
+def get_product(product_name: str):
     try:
-        product = db['products'].find_one({"_id": ObjectId(product_id)})
+        product = db['products'].find_one({"product_name": product_name})
         if product:
-            product['_id'] = str(product['_id'])
+            product['product_name'] = product['product_name']
             return product
         raise HTTPException(status_code=404, detail="Product not found")
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving product: {str(e)}")
 
 @app.post("/cart/add")
-def add_to_cart(cart_item: Item, user_id: str = Depends(get_user_id_from_cookie)):
+def add_to_cart(cart_item: Item, user_id: str = Query(...)):
     try:
         cart = db['carts'].find_one({"user_id": user_id})
         if not cart:
             cart = {"user_id": user_id, "items": []}
 
         for item in cart["items"]:
-            if item["product_id"] == cart_item.product_id:
+            if item["product_name"] == cart_item.product_name:
                 item["quantity"] += cart_item.quantity
+                item["subtotal"] = item["quantity"] * item["price"]
                 break
         else:
-            cart_item_data = cart_item.dict()
-            cart["items"].append(cart_item_data)
+            cart_item.subtotal = cart_item.quantity * cart_item.price
+            cart["items"].append(cart_item.dict())
+        
+        cart["grand_total"] = sum(item["subtotal"] for item in cart["items"])
 
         db['carts'].update_one({"user_id": user_id}, {"$set": cart}, upsert=True)
 
-        grand_total = sum(item["quantity"] * item["price"] for item in cart["items"])
-        db['carts'].update_one({"user_id": user_id}, {"$set": {"grand_total": grand_total}})
-
-        return {"message": f"Added product {cart_item.product_id} with quantity {cart_item.quantity} to cart",
-                "grand_total": grand_total}
+        return {"message": "Item added to cart successfully", "grand_total": cart["grand_total"]}
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error adding to cart: {str(e)}")
 
 @app.post("/cart/remove")
-def remove_from_cart(cart_item: Item, user_id: str = Depends(get_user_id_from_cookie)):
-    try:
-        cart = db['carts'].find_one({"user_id": user_id})
-        if cart:
-            cart['items'] = [item for item in cart['items'] if item['product_id'] != cart_item.product_id]
-            db['carts'].update_one({"user_id": user_id}, {"$set": cart})
-            return {"message": f"Removed product {cart_item.product_id} from cart"}
-        raise HTTPException(status_code=404, detail="Cart not found")
-    except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Error removing from cart: {str(e)}")
-
-@app.get("/cart")
-def get_cart(user_id: str = Depends(get_user_id_from_cookie)):
-    try:
-        cart = db['carts'].find_one({"user_id": user_id})
-        if cart:
-            cart['_id'] = str(cart['_id'])
-            return cart
-        raise HTTPException(status_code=404, detail="Cart not found")
-    except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving cart: {str(e)}")
-
-@app.post("/orders")
-def create_order(order: Order, user_id: str = Depends(get_user_id_from_cookie)):
+def remove_from_cart(product_name: str = Query(...), user_id: str = Query(...)):
     try:
         cart = db['carts'].find_one({"user_id": user_id})
         if not cart:
             raise HTTPException(status_code=404, detail="Cart not found")
 
-        order_dict = {
-            "user_id": user_id,
-            "createdOn": datetime.now(),
-            "total_amount": sum(item["quantity"] * item["price"] for item in cart["items"]),
-            "user_details": order.user_details.dict(),
-            "user_address": order.user_address.dict(),
-            "items": cart["items"],
-            "status": "Pending"
-        }
+        cart['items'] = [item for item in cart['items'] if item['product_name'] != product_name]
 
-        result = db['orders'].insert_one(order_dict)
-        db['carts'].delete_one({"user_id": user_id})
+        cart["grand_total"] = sum(item["subtotal"] for item in cart["items"])
 
-        order_dict["_id"] = str(result.inserted_id)
-        return order_dict
+        db['carts'].update_one({"user_id": user_id}, {"$set": cart})
+
+        return {"message": "Item removed from cart successfully", "grand_total": cart["grand_total"]}
     except PyMongoError as e:
-        raise HTTPException(status_code=500, detail=f"Error creating order: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error removing from cart: {str(e)}")
+
+@app.post("/cart/update")
+def update_cart_item(item: Item, user_id: str = Query(...)):
+    try:
+        cart = db['carts'].find_one({"user_id": user_id})
+        if not cart:
+            raise HTTPException(status_code=404, detail="Cart not found")
+
+        for cart_item in cart["items"]:
+            if cart_item["product_name"] == item.product_name:
+                cart_item["quantity"] = item.quantity
+                cart_item["subtotal"] = item.quantity * cart_item["price"]
+                break
+
+        cart["grand_total"] = sum(cart_item["subtotal"] for cart_item in cart["items"])
+
+        db['carts'].update_one({"user_id": user_id}, {"$set": cart})
+
+        return {"message": "Cart updated successfully", "grand_total": cart["grand_total"]}
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error updating cart: {str(e)}")
+
+@app.get("/cart")
+def get_cart(user_id: str = Query(...)):
+    try:
+        cart = db['carts'].find_one({"user_id": user_id})
+        if not cart:
+            raise HTTPException(status_code=404, detail="Cart not found")
+
+        cart = serialize_document(cart)
+        return cart
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving cart: {str(e)}")
+
+@app.post("/checkout")
+async def create_order(order: OrderCreate):
+    total_amount = sum(item.subtotal for item in order.items)
+    
+    order_data = {
+        "user_id": order.user_id,
+        "items": [item.dict() for item in order.items],
+        "shipping_address": order.shipping_address.dict(),
+        "total_amount": total_amount,
+        "created_on": datetime.now(),
+        "status": "processing"
+    }
+    
+    try:
+        order_id = db.orders.insert_one(order_data).inserted_id
+        return {"success": True, "order_id": str(order_id)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to place the order.")
 
 @app.post("/orders/cancel")
-def cancel_order(order_id: str, user_id: str = Depends(get_user_id_from_cookie)):
+def cancel_order(order_id: str, user_id: str = Query(...)):
     try:
         order = db['orders'].find_one({"_id": ObjectId(order_id), "user_id": user_id})
         if not order:
@@ -189,7 +204,7 @@ def cancel_order(order_id: str, user_id: str = Depends(get_user_id_from_cookie))
         raise HTTPException(status_code=500, detail=f"Error cancelling order: {str(e)}")
 
 @app.get("/orders")
-def get_order(order_id: str, user_id: str = Depends(get_user_id_from_cookie)):
+def get_order(order_id: str, user_id: str):
     try:
         order = db['orders'].find_one({"_id": ObjectId(order_id), "user_id": user_id})
         if order:
@@ -199,10 +214,9 @@ def get_order(order_id: str, user_id: str = Depends(get_user_id_from_cookie)):
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving order: {str(e)}")
 
-# Route to serve HTML files
 @app.get("/{file_name}")
 async def get_file(file_name: str):
-    if file_name in ["index.html", "login.html", "register.html", "cart.html", "orders.html"]:
+    if file_name in ["index.html", "login.html", "register.html", "cart.html", "orders.html", "checkout.html"]:
         file_path = os.path.join(frontend_directory, file_name)
         if os.path.isfile(file_path):
             return StaticFiles(directory=frontend_directory).app(scope={"type": "http", "path": f"/static/{file_name}"}, receive=None)

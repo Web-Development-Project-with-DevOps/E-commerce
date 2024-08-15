@@ -1,0 +1,60 @@
+    {
+      "product": "Canon DSLR Camera",
+      "price": 90000.0,
+      "quantity": 90,
+      "description": "A professional DSLR camera with high-resolution imaging and advanced features."
+  },
+  {
+      "product": "Cyclocomputer",
+      "price": 5000.0,
+      "quantity": 30,
+      "description": "A compact device for tracking your cycling metrics and performance."
+  },
+  {
+      "product": "Apple Watch",
+      "price": 20000.0,
+      "quantity": 50,
+      "description": "A stylish smartwatch with fitness tracking and notification features."
+  },
+  {
+      "product": "Apple Macbook Pro",
+      "price": 100000.0,
+      "quantity": 25,
+      "description": "A high-performance laptop with a stunning display and powerful processing capabilities."
+  },
+  {
+      "product": "Samsung UHD TV",
+      "price": 130000.0,
+      "quantity": 20,
+      "description": "A 65-inch ultra-high-definition television with exceptional clarity and smart features."
+  },
+  {
+      "product": "Microwave",
+      "price": 7000.0,
+      "quantity": 60,
+      "description": "A compact microwave oven with multiple cooking presets and easy-to-use controls."
+  },
+  {
+      "product": "Air Conditioner",
+      "price": 10000.0,
+      "quantity": 100,
+      "description": "An efficient air conditioner with cooling and energy-saving features."
+  },
+  {
+      "product": "Philips Air Fryer",
+      "price": 20000.0,
+      "quantity": 30,
+      "description": "A versatile air fryer for healthy cooking with a range of temperature settings."
+  },
+  {
+      "product": "XBOX",
+      "price": 25000.0,
+      "quantity": 25,
+      "description": "A popular gaming console with a wide selection of games and multimedia features."
+  },
+  {
+      "product": "Sony PS5",
+      "price": 55000.0,
+      "quantity": 40,
+      "description": "The latest PlayStation console offering high-definition graphics and an immersive gaming experience."
+  }

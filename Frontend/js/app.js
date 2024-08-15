@@ -1,162 +1,3 @@
-// document.addEventListener('DOMContentLoaded', () => {
-//     const productsContainer = document.getElementById('products-container');
-//     const productModal = document.getElementById('product-modal');
-//     const modalDescription = document.getElementById('modal-description');
-//     const modalImg = document.getElementById('modal-img');
-//     const modalPrice = document.getElementById('modal-price');
-//     const addToCartBtn = document.querySelector('.add-to-cart');
-//     const searchBar = document.getElementById('search-bar');
-//     const cartCount = document.getElementById('cart-count');
-
-//     // Check if user is logged in by checking for user_id in cookies
-//     const userId = getCookie('user_id');
-
-//     if (userId) {
-//         // User is logged in
-//         document.querySelector(".login").style.display = "none";
-//         document.querySelector(".register").style.display = "none";
-//         document.querySelector(".orders").style.display = "block";
-//         document.querySelector(".logout").style.display = "block";
-//     } else {
-//         // User is not logged in
-//         document.querySelector(".login").style.display = "block";
-//         document.querySelector(".register").style.display = "block";
-//         document.querySelector(".orders").style.display = "none";
-//         document.querySelector(".logout").style.display = "none";
-//     }
-
-//     // Logout functionality
-//     document.getElementById("logout").addEventListener("click", () => {
-//         // Clear user_id cookie
-//         document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-//         window.location.href = "/static/login.html";
-//     });
-
-//     async function fetchProducts() {
-//         try {
-//             const response = await fetch('http://127.0.0.1:8000/products');
-//             if (!response.ok) {
-//                 throw new Error('Network response was not ok');
-//             }
-//             const products = await response.json();
-//             console.log('Fetched products:', products); // Debug: Check the fetched products
-//             displayProducts(products);
-//         } catch (error) {
-//             console.error('Error fetching products:', error);
-//         }
-//     }
-
-//     function displayProducts(products) {
-//         productsContainer.innerHTML = '';
-//         if (!Array.isArray(products)) {
-//             console.error('Expected products to be an array but got:', products);
-//             return;
-//         }
-
-//         products.forEach(product => {
-//             const productCard = document.createElement('div');
-//             productCard.classList.add('col-md-4', 'mb-4');
-//             productCard.innerHTML = `
-//                 <div class="card product-card" data-id="${product._id}">
-//                     <img src="/static/assets/images/product-placeholder.jpg" class="card-img-top" alt="${product.description || ''}">
-//                     <div class="card-body">
-//                         <h5 class="card-title">${product.name}</h5>
-//                         <p class="card-text">$${product.price.toFixed(2)}</p>
-//                         <button class="btn btn-primary view-details">Details</button>
-//                     </div>
-//                 </div>
-//             `;
-//             productsContainer.appendChild(productCard);
-//         });
-//         attachEventListeners();
-//     }
-
-//     function attachEventListeners() {
-//         const viewDetailsButtons = document.querySelectorAll('.view-details');
-//         viewDetailsButtons.forEach(button => {
-//             button.addEventListener('click', async (event) => {
-//                 const productId = event.target.closest('.product-card').dataset.id;
-//                 try {
-//                     const response = await fetch(`http://127.0.0.1:8000/products/${productId}`);
-//                     if (!response.ok) {
-//                         throw new Error('Network response was not ok');
-//                     }
-//                     const product = await response.json();
-//                     showModal(product);
-//                 } catch (error) {
-//                     console.error('Error fetching product details:', error);
-//                 }
-//             });
-//         });
-
-//         addToCartBtn.addEventListener('click', async () => {
-//             const productId = productModal.dataset.id;
-//             const quantity = 1; // Default quantity
-//             try {
-//                 await fetch(`http://127.0.0.1:8000/cart/add`, {
-//                     method: 'POST',
-//                     headers: {
-//                         'Content-Type': 'application/json'
-//                     },
-//                     body: JSON.stringify({
-//                         product_id: productId,
-//                         quantity: quantity,
-//                         price: parseFloat(modalPrice.textContent.slice(1))
-//                     })
-//                 });
-//                 alert('Product added to cart!');
-//                 updateCartCount();
-//             } catch (error) {
-//                 console.error('Error adding to cart:', error);
-//             }
-//         });
-//     }
-
-//     function showModal(product) {
-//         modalDescription.textContent = product.name;
-//         modalImg.src = '/static/assets/images/product-placeholder.jpg'; // Update with actual image if available
-//         modalPrice.textContent = `$${product.price.toFixed(2)}`;
-//         productModal.dataset.id = product._id;
-//         $('#product-modal').modal('show'); // Use jQuery to show Bootstrap modal
-//     }
-
-//     searchBar.addEventListener('input', () => {
-//         const query = searchBar.value.toLowerCase();
-//         const productCards = document.querySelectorAll('.product-card');
-//         productCards.forEach(card => {
-//             const title = card.querySelector('.card-title').textContent.toLowerCase();
-//             card.style.display = title.includes(query) ? 'block' : 'none';
-//         });
-//     });
-
-//     async function updateCartCount() {
-//         if (!userId) return; // Skip if no user ID
-//         try {
-//             const response = await fetch(`http://127.0.0.1:8000/cart/${userId}`);
-//             if (!response.ok) {
-//                 throw new Error('Network response was not ok');
-//             }
-//             const cart = await response.json();
-//             cartCount.textContent = cart.items.length;
-//         } catch (error) {
-//             console.error('Error fetching cart count:', error);
-//         }
-//     }
-
-//     fetchProducts();
-//     if (userId) {
-//         updateCartCount();
-//     }
-// });
-
-// // Helper function to get a cookie value
-// function getCookie(name) {
-//     const value = `; ${document.cookie}`;
-//     const parts = value.split(`; ${name}=`);
-//     if (parts.length === 2) return parts.pop().split(';').shift();
-// }
-
-
 document.addEventListener('DOMContentLoaded', () => {
     const productsContainer = document.getElementById('products-container');
     const productModal = document.getElementById('product-modal');
@@ -167,33 +8,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBar = document.getElementById('search-bar');
     const cartCount = document.getElementById('cart-count');
 
-    // Function to get a cookie by name
     function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
+        let cookieArr = document.cookie.split(";");
+        for (let i = 0; i < cookieArr.length; i++) {
+            let cookiePair = cookieArr[i].split("=");
+            if (name == cookiePair[0].trim()) {
+                return decodeURIComponent(cookiePair[1]);
+            }
+        }
+        return null;
     }
 
-    // Retrieve user ID from cookie
     const userId = getCookie('user_id');
 
     if (userId) {
-        // User is logged in
         document.querySelector(".login").style.display = "none";
         document.querySelector(".register").style.display = "none";
         document.querySelector(".orders").style.display = "block";
         document.querySelector(".logout").style.display = "block";
     } else {
-        // User is not logged in
         document.querySelector(".login").style.display = "block";
         document.querySelector(".register").style.display = "block";
         document.querySelector(".orders").style.display = "none";
         document.querySelector(".logout").style.display = "none";
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = "Login to Add to Cart";
     }
 
-    // Logout functionality
     document.getElementById("logout").addEventListener("click", () => {
-        // Remove user_id cookie
         document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         window.location.href = "/static/login.html";
     });
@@ -222,12 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const productCard = document.createElement('div');
             productCard.classList.add('col-md-4', 'mb-4');
             productCard.innerHTML = `
-                <div class="product-card">
-                    <img src="${product.image || '/static/assets/images/product-placeholder.jpg'}" class="product-img" alt="${product.name}">
-                    <div class="product-name">${product.name}</div>
+                <div class="product-card" data-name="${product.product_name}" data-price="${product.price}">
+                    <img src="${product.image_url || '/static/assets/images/product-placeholder.jpg'}" class="product-img" alt="${product.product_name}">
+                    <div class="product-name">${product.product_name}</div>
                     <div class="product-price">$${product.price.toFixed(2)}</div>
                     <div class="product-quantity">Available: ${product.quantity}</div>
-                    <button class="btn details-btn" data-toggle="modal" data-target="#product-modal" data-id="${product._id}">Details</button>
+                    <button class="btn details-btn" data-toggle="modal" data-target="#product-modal" data-name="${product.product_name}" data-price="${product.price}" data-id="${product._id}">Details</button>
                 </div>
             `;
             productsContainer.appendChild(productCard);
@@ -238,69 +80,68 @@ document.addEventListener('DOMContentLoaded', () => {
     function attachEventListeners() {
         const detailsButtons = document.querySelectorAll('.details-btn');
         detailsButtons.forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const productId = event.target.dataset.id;
-                try {
-                    const response = await fetch(`http://127.0.0.1:8000/products/${productId}`);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    const product = await response.json();
-                    showModal(product);
-                } catch (error) {
-                    console.error('Error fetching product details:', error);
-                }
+            button.addEventListener('click', (event) => {
+                const productCard = event.target.closest('.product-card');
+                showModal(productCard);
             });
         });
 
-        addToCartBtn.addEventListener('click', async () => {
-            const productId = productModal.dataset.id;
-            const quantity = 1; // Default quantity
-            try {
-                await fetch(`http://127.0.0.1:8000/cart/add`, {
+        if (userId) {
+            addToCartBtn.addEventListener('click', () => {
+                const productCard = document.querySelector('.product-card[data-name="' + modalName.textContent + '"]');
+                const price = parseFloat(productCard.dataset.price);
+                const quantity = 1; // Default quantity
+                const subtotal = price * quantity; // Calculate subtotal
+
+                // Debugging logs
+                console.log('Product Name:', modalName.textContent);
+                console.log('Price from Product Card:', price);
+
+                // Call the add_to_cart endpoint
+                fetch(`http://127.0.0.1:8000/cart/add?user_id=${userId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        // No Authorization header, use cookies instead
                     },
                     body: JSON.stringify({
-                        product_id: productId,
-                        quantity: quantity
+                        product_name: modalName.textContent,
+                        price: price,
+                        quantity: quantity,
+                        subtotal: subtotal
                     })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Product added to cart!');
+                        updateCartCount(); // Update the cart count only after adding to cart
+                    } else {
+                        console.error('Error adding to cart:', response.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding to cart:', error);
                 });
-                alert('Product added to cart!');
-                updateCartCount();
-            } catch (error) {
-                console.error('Error adding to cart:', error);
-            }
-        });
+            });
+        }
     }
 
-    function showModal(product) {
-        modalName.textContent = product.name;
-        modalDescription.textContent = product.description;
-        modalImg.src = product.image || '/static/assets/images/product-placeholder.jpg';
-        productModal.dataset.id = product._id;
+    function showModal(productCard) {
+        const productName = productCard.dataset.name;
+        const productPrice = productCard.dataset.price;
+        modalName.textContent = productName;
+        modalDescription.textContent = productCard.querySelector('.product-name').textContent;
+        modalImg.src = productCard.querySelector('img').src;
+        productModal.dataset.id = productCard.dataset.id;
+
+        // Debugging log
+        console.log('Showing Modal for Product:', { name: productName, price: productPrice });
+
         $('#product-modal').modal('show'); // Use jQuery to show Bootstrap modal
     }
 
-    searchBar.addEventListener('input', () => {
-        const query = searchBar.value.toLowerCase();
-        const productCards = document.querySelectorAll('.product-card');
-        productCards.forEach(card => {
-            const title = card.querySelector('.product-name').textContent.toLowerCase();
-            card.style.display = title.includes(query) ? 'block' : 'none';
-        });
-    });
-
     async function updateCartCount() {
-        if (!userId) return; // Skip if no user ID
         try {
-            const response = await fetch(`http://127.0.0.1:8000/cart`, {
-                headers: { 
-                    // No Authorization header, use cookies instead
-                }
-            });
+            const response = await fetch(`http://127.0.0.1:8000/cart?user_id=${userId}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -312,7 +153,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     fetchProducts();
-    if (userId) {
-        updateCartCount();
-    }
 });

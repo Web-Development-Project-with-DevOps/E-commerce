@@ -1,101 +1,110 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const orderList = document.getElementById('orders-list');
-    const userId = getCookie('user_id'); // Obtain userId from cookies
+document.addEventListener("DOMContentLoaded", () => {
+    const userId = getCookie("user_id");  // Retrieve user_id from cookie
 
     if (!userId) {
-        alert('You need to log in to view your orders.');
-        window.location.href = '/static/login.html'; // Updated path
-        return;
+        window.location.href = "/login.html";  // Redirect to login if not logged in
+    } else {
+        fetchOrders(userId);
     }
-
-    // Update the navigation bar based on user login status
-    const loginItem = document.querySelector('.login-item');
-    const registerItem = document.querySelector('.register-item');
-    const logoutItem = document.querySelector('.logout-item');
-
     if (userId) {
-        loginItem.style.display = 'none';
-        registerItem.style.display = 'none';
-        logoutItem.style.display = 'block';
+        // User is logged in
+        document.querySelector(".login").style.display = "none";
+        document.querySelector(".register").style.display = "none";
+        document.querySelector(".orders").style.display = "block";
+        document.querySelector(".logout").style.display = "block";
+    } else {
+        // User is not logged in
+        document.querySelector(".login").style.display = "block";
+        document.querySelector(".register").style.display = "block";
+        document.querySelector(".orders").style.display = "none";
+        document.querySelector(".logout").style.display = "none";
     }
-
-    document.getElementById('logout').addEventListener('click', () => {
-        // Remove user ID cookie on logout
-        document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-        window.location.href = '/static/index.html'; // Updated path
+    
+    // Logout functionality
+    document.getElementById("logout").addEventListener("click", () => {
+        // Remove user_id cookie
+        document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        window.location.href = "/static/login.html";
     });
-
-    async function fetchOrders() {
-        try {
-            const response = await fetch(`/orders`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include' // Ensure cookies are sent with request
-            });
-            if (!response.ok) {
-                throw new Error('Failed to fetch orders');
-            }
-            const orders = await response.json();
-            displayOrders(orders);
-        } catch (error) {
-            console.error('Error fetching orders:', error);
-            alert('There was an issue fetching your orders. Please try again later.');
-        }
-    }
-
-    function displayOrders(orders) {
-        orderList.innerHTML = '';
-        if (orders.length === 0) {
-            orderList.innerHTML = '<p>No orders found.</p>';
-            return;
-        }
-
-        orders.forEach(order => {
-            const orderItem = document.createElement('a');
-            orderItem.classList.add('list-group-item', 'list-group-item-action');
-            orderItem.href = '#';
-            orderItem.innerHTML = `
-                <h5>Order #${order._id}</h5>
-                <p>Total Amount: $${order.total_amount.toFixed(2)}</p>
-                <p>Status: ${order.status}</p>
-                <button class="btn btn-primary view-order" data-id="${order._id}">View Details</button>
-            `;
-            orderList.appendChild(orderItem);
-        });
-
-        attachEventListeners();
-    }
-
-    function attachEventListeners() {
-        const viewOrderButtons = document.querySelectorAll('.view-order');
-        viewOrderButtons.forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const orderId = event.target.dataset.id;
-                try {
-                    const response = await fetch(`/orders/${orderId}`, {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include' // Ensure cookies are sent with request
-                    });
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch order details');
-                    }
-                    const order = await response.json();
-                    alert(JSON.stringify(order, null, 2)); // Display order details
-                } catch (error) {
-                    console.error('Error fetching order details:', error);
-                    alert('There was an issue fetching the order details. Please try again later.');
-                }
-            });
-        });
-    }
-
-    fetchOrders(); // Load orders when page loads
 });
 
-// Helper function to get a cookie value
+function fetchOrders(userId) {
+    fetch(`/orders?user_id=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            const ordersContainer = document.getElementById("orders-container");
+
+            if (data.orders && data.orders.length > 0) {
+                data.orders.forEach(order => {
+                    const orderElement = document.createElement("div");
+                    orderElement.className = "order-card card mb-3";
+                    orderElement.innerHTML = `
+                        <div class="card-body">
+                            <h5 class="card-title">Order ID: ${order._id}</h5>
+                            <p class="card-text"><strong>Date:</strong> ${new Date(order.created_on).toLocaleDateString()}</p>
+                            <p class="card-text"><strong>Total Amount:</strong> $${order.total_amount.toFixed(2)}</p>
+                            <p class="card-text"><strong>Status:</strong> ${order.status}</p>
+                            <h6>Items:</h6>
+                            <ul class="list-group">
+                                ${order.items.map(item => `
+                                    <li class="list-group-item">
+                                        <strong>${item.product_id}</strong> - ${item.quantity} x $${item.price.toFixed(2)} = $${item.subtotal.toFixed(2)}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            ${order.status !== "Cancelled" ? `
+                                <button class="btn btn-danger mt-3 cancel-order-btn" data-order-id="${order._id}">Cancel Order</button>
+                            ` : `
+                                <p class="text-danger mt-3">This order has been cancelled.</p>
+                            `}
+                        </div>
+                    `;
+                    ordersContainer.appendChild(orderElement);
+                });
+
+                // Attach event listeners to the cancel buttons
+                document.querySelectorAll('.cancel-order-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const orderId = event.target.getAttribute('data-order-id');
+                        cancelOrder(orderId, userId);
+                    });
+                });
+            } else {
+                ordersContainer.innerHTML = `<p>You have no orders yet.</p>`;
+            }
+        });
+}
+
+function cancelOrder(orderId, userId) {
+    fetch('/orders/cancel', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order_id: orderId, user_id: userId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert(data.message);
+            location.reload();  // Reload the page to reflect the cancelled order
+        } else {
+            alert("Failed to cancel the order.");
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling order:', error);
+        alert("An error occurred while cancelling the order. Please try again later.");
+    });
+}
+
 function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
+    let cookieArr = document.cookie.split(";");
+    for (let i = 0; i < cookieArr.length; i++) {
+        let cookiePair = cookieArr[i].split("=");
+        if (name == cookiePair[0].trim()) {
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+    return null;
 }

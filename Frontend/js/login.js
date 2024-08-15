@@ -1,65 +1,38 @@
-// document.addEventListener('DOMContentLoaded', () => {
-//     const loginForm = document.getElementById('login-form');
+document.addEventListener("DOMContentLoaded", () => {
+    const loginForm = document.getElementById("login-form");
+    const loginMessage = document.getElementById("login-message");
 
-//     loginForm.addEventListener('submit', async (event) => {
-//         event.preventDefault();
-
-//         const formData = new FormData(loginForm);
-//         const user = {
-//             email: formData.get('email'),
-//             password: formData.get('password')
-//         };
-
-//         try {
-//             const response = await fetch('http://127.0.0.1:8000/login', {
-//                 method: 'POST',
-//                 headers: { 'Content-Type': 'application/json' },
-//                 body: JSON.stringify(user)
-//             });
-
-//             if (response.ok) {
-//                 // Redirect to the index page after successful login
-//                 window.location.href = '/static/index.html';
-//             } else {
-//                 const result = await response.json();
-//                 alert(`Error: ${result.detail || 'Something went wrong'}`);
-//             }
-//         } catch (error) {
-//             console.error('Error logging in:', error);
-//         }
-//     });
-// });
-document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('login-form');
-
-    loginForm.addEventListener('submit', async (event) => {
+    loginForm.addEventListener("submit", (event) => {
         event.preventDefault();
+        
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-        const formData = new FormData(loginForm);
-        const user = {
-            email: formData.get('email'),
-            password: formData.get('password')
-        };
-
-        try {
-            const response = await fetch('http://127.0.0.1:8000/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            });
-
-            console.log('Response Status:', response.status);
-            console.log('Response Headers:', response.headers);
-            console.log('Response Body:', await response.text());  // Log response body
-
-            if (response.ok) {
-                window.location.href = '/static/index.html';
-            } else {
-                const result = await response.json();
-                alert(`Error: ${result.detail || 'Something went wrong'}`);
+        fetch("/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Login failed");
             }
-        } catch (error) {
-            console.error('Error logging in:', error);
-        }
+            return response.json();
+        })
+        .then(data => {
+            // Create a cookie with the user_id
+            document.cookie = `user_id=${data.user_id}; path=/; max-age=86400`; // Cookie expires in 1 day
+            loginMessage.textContent = "Login successful!";
+            loginMessage.style.color = "green";
+            setTimeout(() => {
+                window.location.href = "index.html"; // Redirect to home or another page
+            }, 1000);
+        })
+        .catch(error => {
+            loginMessage.textContent = error.message;
+            loginMessage.style.color = "red";
+        });
     });
 });

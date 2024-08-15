@@ -1,87 +1,96 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Retrieve user ID from cookies
-    const userId = getCookie('user_id');
+document.addEventListener("DOMContentLoaded", () => {
+    // Function to get the value of a specific cookie by name
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Retrieve user_id from cookie
+    const userId = getCookie("user_id"); // Assumes 'user_id' is the cookie name
 
     if (!userId) {
-        alert('You need to log in to access the cart.');
-        window.location.href = '/static/login.html'; // Updated path for login
-        return;
+        alert("User is not logged in!");
+        return; // Prevent further execution if user_id is not found
     }
-
-    // Update the navigation bar based on user login status
-    const loginItem = document.querySelector('.login-item');
-    const registerItem = document.querySelector('.register-item');
-    const logoutItem = document.querySelector('.logout-item');
 
     if (userId) {
-        loginItem.style.display = 'none';
-        registerItem.style.display = 'none';
-        logoutItem.style.display = 'block';
+        // User is logged in
+        document.querySelector(".login").style.display = "none";
+        document.querySelector(".register").style.display = "none";
+        document.querySelector(".orders").style.display = "block";
+        document.querySelector(".logout").style.display = "block";
+    } else {
+        // User is not logged in
+        document.querySelector(".login").style.display = "block";
+        document.querySelector(".register").style.display = "block";
+        document.querySelector(".orders").style.display = "none";
+        document.querySelector(".logout").style.display = "none";
     }
 
-    document.getElementById('logout').addEventListener('click', () => {
-        // Remove user ID cookie on logout
-        document.cookie = 'user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-        window.location.href = '/static/index.html'; // Updated path for index
+    // Logout functionality
+    document.getElementById("logout").addEventListener("click", () => {
+        // Remove user_id cookie
+        document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        window.location.href = "/static/login.html";
     });
 
-    // Fetch and display cart items
-    function loadCart() {
-        fetch(`/cart`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include' // Ensure cookies are sent with request
-        })
-        .then(response => response.json())
-        .then(data => {
-            const cartItemsContainer = document.getElementById('cart-items');
-            const totalPriceElement = document.getElementById('total-price');
-            let total = 0;
-            cartItemsContainer.innerHTML = ''; // Clear previous items
-            data.items.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.textContent = `Product ID: ${item.product_id}, Quantity: ${item.quantity}, Price: $${item.price}`;
-                cartItemsContainer.appendChild(itemElement);
-                total += item.quantity * item.price;
-            });
-            totalPriceElement.textContent = total.toFixed(2);
-            document.getElementById('cart-count').textContent = data.items.length;
-        })
-        .catch(error => console.error('Failed to load cart:', error));
-    }
+    const checkoutForm = document.getElementById("checkout-form");
 
-    // Checkout functionality
-    document.getElementById('checkout').addEventListener('click', function() {
-        const userAddress = {
-            city: prompt('Enter your city:'),
-            country: prompt('Enter your country:'),
-            zip_code: prompt('Enter your ZIP code:')
+    checkoutForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const userId = getCookie("user_id");
+        const shippingAddress = {
+            city: document.getElementById("city").value,
+            country: document.getElementById("country").value,
+            zip_code: document.getElementById("zip_code").value
         };
 
-        fetch(`/orders`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include', // Ensure cookies are sent with request
-            body: JSON.stringify({ user_address: userAddress })
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert('Order created successfully! Order ID: ' + data._id);
-            window.location.href = '/static/orders.html'; // Updated path for orders
-        })
-        .catch(error => {
-            alert('Failed to create order: ' + error.message);
-        });
-    });
+        // Fetch cart items to include in the order
+        fetch(`/cart?user_id=${userId}`)
+            .then(response => response.json())
+            .then(cartData => {
+                if (cartData.items && cartData.items.length > 0) {
+                    const orderData = {
+                        user_id: userId,
+                        items: cartData.items,
+                        shipping_address: shippingAddress
+                    };
 
-    loadCart(); // Load cart items when page loads
+                    // Send order data to backend
+                    fetch("/checkout", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(orderData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Redirect to orders.html with order_id as a query parameter
+                            window.location.href = `/orders.html?order_id=${data.order_id}`;
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                    .catch(error => console.error("Error placing order:", error));
+                } else {
+                    alert("Your cart is empty.");
+                }
+            })
+            .catch(error => console.error("Error fetching cart data:", error));
+    });
 });
 
-// Helper function to get a cookie value
 function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
+    let cookieArr = document.cookie.split(";");
+    for (let i = 0; i < cookieArr.length; i++) {
+        let cookiePair = cookieArr[i].split("=");
+        if (name === cookiePair[0].trim()) {
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+    return null;
 }

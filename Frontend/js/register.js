@@ -1,42 +1,37 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const registerForm = document.getElementById('register-form');
+document.addEventListener("DOMContentLoaded", () => {
+    const registerForm = document.getElementById("register-form");
+    const registerMessage = document.getElementById("register-message");
 
-    registerForm.addEventListener('submit', async (event) => {
+    registerForm.addEventListener("submit", (event) => {
         event.preventDefault();
+        
+        const username = document.getElementById("username").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-        const formData = new FormData(registerForm);
-        const user = {
-            userName: formData.get('username'),
-            email: formData.get('email'),
-            password: formData.get('password')
-        };
-
-        try {
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user),
-                credentials: 'include' // Ensure cookies are sent with the request
-            });
-
-            // Check if the response is OK
-            if (response.ok) {
-                const result = await response.json();
-                alert(result.msg);
-
-                // Store the user ID in a cookie
-                const { user_id } = result;
-                document.cookie = `user_id=${user_id}; path=/`;
-
-                // Redirect to login page
-                window.location.href = '/static/login.html'; // Updated path
-            } else {
-                // Handle non-OK responses
-                const result = await response.json();
-                alert(`Error: ${result.detail || 'Something went wrong'}`);
+        fetch("/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username, email, password })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Registration failed");
             }
-        } catch (error) {
-            console.error('Error registering user:', error);
-        }
+            return response.json();
+        })
+        .then(data => {
+            registerMessage.textContent = "Registration successful!";
+            registerMessage.style.color = "green";
+            setTimeout(() => {
+                window.location.href = "login.html"; // Redirect to login or another page
+            }, 1000);
+        })
+        .catch(error => {
+            registerMessage.textContent = error.message;
+            registerMessage.style.color = "red";
+        });
     });
 });
