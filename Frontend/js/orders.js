@@ -32,10 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     orderCard.innerHTML = `
                         <div class="card mb-4 order-card">
                             <div class="card-header">
-                                <h5 class="card-title">Order ID: ${order._id}</h5>
+                                <h5 class="card-title">Your order</h5>
                             </div>
                             <div class="card-body">
-                                <p><strong>Total Amount:</strong> $${order.total_amount}</p>
+                                <p><strong>Total Amount:</strong> Rs.${order.total_amount}</p>
                                 <p><strong>Status:</strong> ${order.status}</p>
                                 <p><strong>Created On:</strong> ${new Date(order.created_on).toLocaleDateString()}</p>
                                 <h6>Items:</h6>
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                         <li class="list-group-item">
                                             <p><strong>Product:</strong> ${item.product_name}</p>
                                             <p><strong>Quantity:</strong> ${item.quantity}</p>
-                                            <p><strong>Price:</strong> $${item.price}</p>
+                                            <p><strong>Price:</strong> Rs.${item.price}</p>
                                             <p><strong>Subtotal:</strong> $${item.subtotal}</p>
                                         </li>
                                     `).join('')}
