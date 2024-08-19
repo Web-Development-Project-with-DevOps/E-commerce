@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </ul>
                                 <h6>Shipping Address:</h6>
                                 <p><strong>City:</strong> ${order.shipping_address.city}</p>
-                                <p><strong>Country:</strong> ${order.shipping_address.country}</p>
+                                <p><strong>State:</strong> ${order.shipping_address.country}</p>
                                 <p><strong>Zip Code:</strong> ${order.shipping_address.zip_code}</p>
                             </div>
                         </div>
