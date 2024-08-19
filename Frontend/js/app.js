@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="product-card" data-name="${product.product_name}" data-price="${product.price}" data-description="${product.description}">
                     <img src="${product.image_url || '/static/assets/images/product-placeholder.jpg'}" class="product-img" alt="${product.product_name}">
                     <div class="product-name">${product.product_name}</div>
-                    <div class="product-price">$${product.price.toFixed(2)}</div>
+                    <div class="product-price">Rs.${product.price.toFixed(2)}</div>
                     <div class="product-quantity">Available: ${product.quantity}</div>
                     <button class="btn details-btn" data-toggle="modal" data-target="#product-modal" data-name="${product.product_name}" data-price="${product.price}" data-id="${product._id}">Details</button>
                 </div>
