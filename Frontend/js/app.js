@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById("logout").addEventListener("click", () => {
-        document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
         window.location.href = "/static/login.html";
     });
 
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const productCard = document.createElement('div');
             productCard.classList.add('col-md-4', 'mb-4');
             productCard.innerHTML = `
-                <div class="product-card" data-name="${product.product_name}" data-price="${product.price}">
+                <div class="product-card" data-name="${product.product_name}" data-price="${product.price}" data-description="${product.description}">
                     <img src="${product.image_url || '/static/assets/images/product-placeholder.jpg'}" class="product-img" alt="${product.product_name}">
                     <div class="product-name">${product.product_name}</div>
                     <div class="product-price">$${product.price.toFixed(2)}</div>
@@ -128,13 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function showModal(productCard) {
         const productName = productCard.dataset.name;
         const productPrice = productCard.dataset.price;
+        const productDescription = productCard.dataset.description; // Get product description
         modalName.textContent = productName;
-        modalDescription.textContent = productCard.querySelector('.product-name').textContent;
+        modalDescription.textContent = productDescription; // Set product description
         modalImg.src = productCard.querySelector('img').src;
         productModal.dataset.id = productCard.dataset.id;
 
         // Debugging log
-        console.log('Showing Modal for Product:', { name: productName, price: productPrice });
+        console.log('Showing Modal for Product:', { name: productName, price: productPrice, description: productDescription });
 
         $('#product-modal').modal('show'); // Use jQuery to show Bootstrap modal
     }

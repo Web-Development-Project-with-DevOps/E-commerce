@@ -1,37 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Orders - ShoppingHub</title>
+    <title>Orders - ShoppingHub</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* Header Styling */
+        header {
+            margin-bottom: 1rem;
+        }
+
+        .navbar-nav .nav-item .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+        }
+
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #f8f9f9 !important;
+            background-color: #0056b3;
+            border-radius: 4px;
+        }
+
+        .navbar-nav .nav-item.active .nav-link {
+            color: #007bff !important;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-body p {
+            margin-bottom: 0.5rem;
+        }
+
+        .list-group-item {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin-bottom: 0.5rem;
+        }
+
+        .list-group-item p {
+            margin-bottom: 0.2rem;
+        }
+
+        .order-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem; /* Adjust vertical spacing */
+        }
+
+        .order-card h5 {
+            margin: 0;
+        }
+
+        .order-card ul {
+            padding-left: 1rem;
+        }
+
+        .order-card ul li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .order-card ul li:last-child {
+            border-bottom: none;
+        }
+
+        .order-card h6 {
+            margin-top: 1rem;
+            color: #333;
+        }
+
+        /* Adjust card spacing and width in grid */
+        .card-container {
+            margin: 0.5rem; /* Horizontal spacing between cards */
+        }
+
+        .order-card {
+            width: 100%; /* Full width within its column */
+            max-width: 400px; /* Maximum width for each card */
+        }
+
+        /* Ensure responsiveness */
+        @media (max-width: 767.98px) {
+            .order-card {
+                max-width: 100%; /* Full width on small screens */
+            }
+        }
+    </style>
 </head>
+
 <body>
     <header class="bg-primary text-white py-3">
         <div class="container">
             <nav class="navbar navbar-expand-lg navbar-light">
                 <a class="navbar-brand h4 text-white" href="#">ShoppingHub</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ml-auto">
-                        <li class="nav-item"><a class="nav-link text-white" href="index.html">Home</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="cart.html">Cart (<span id="cart-count">0</span>)</a></li>
-                        <li class="nav-item login"><a class="nav-link text-white" href="login.html">Login</a></li>
-                        <li class="nav-item register"><a class="nav-link text-white" href="register.html">Register</a></li>
-                        <li class="nav-item orders"><a class="nav-link text-white" href="order.html">Orders</a></li>
-                        <li class="nav-item logout"><a class="nav-link text-white" href="#" id="logout">Logout</a></li>
+                        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                        <li class="nav-item login"><a class="nav-link" href="login.html">Login</a></li>
+                        <li class="nav-item register"><a class="nav-link" href="register.html">Register</a></li>
+                        <li class="nav-item orders" style="display: none;"><a class="nav-link" href="orders.html">Orders</a></li>
                     </ul>
                 </div>
             </nav>
         </div>
     </header>
     <main class="container my-4">
-        <h2>Your Orders</h2>
-        <div id="orders-container">
+        <h2>My Orders</h2>
+        <div id="orders-container" class="row">
             <!-- Orders will be dynamically loaded here -->
         </div>
     </main>
@@ -43,6 +139,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="/static/js/order.js"></script>
+    <script src="/static/js/orders.js"></script>
 </body>
+
 </html>

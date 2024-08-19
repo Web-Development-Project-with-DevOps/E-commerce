@@ -36,7 +36,6 @@ class ShippingAddress(BaseModel):
 
 class OrderCreate(BaseModel):
     user_id: str
-    items: List[Item]
     shipping_address: ShippingAddress
 
 class Product(BaseModel):
