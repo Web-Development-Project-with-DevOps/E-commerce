@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     cartItemsDiv.innerHTML += `
                         <div class="cart-item" data-product-name="${item.product_name}" data-price="${item.price}">
                             <p>${item.product_name}</p>
-                            <p>$${item.price.toFixed(2)}</p>
+                            <p>Rs.${item.price.toFixed(2)}</p>
                             <div class="item-quantity-container">
                                 <button class="quantity-btn decrease-quantity">-</button>
                                 <input type="number" value="${item.quantity}" min="1" class="item-quantity">
