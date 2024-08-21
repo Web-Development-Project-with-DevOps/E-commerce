@@ -1,4 +1,5 @@
 FROM python:3.11-slim
+WORKDIR /app
 RUN apt update -y && apt upgrade -y
 RUN apt install python3 -y
 RUN apt install pip -y
