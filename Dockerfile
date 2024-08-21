@@ -2,7 +2,7 @@ FROM python:3.11-slim
 WORKDIR /app
 RUN apt update -y && apt upgrade -y
 RUN apt install python3 -y
-RUN apt install pip -y
+RUN pip install --no-cache-dir -r requirements.txt
 RUN apt-get update && apt-get install -y git
 RUN git clone https://github.com/Web-Development-Project-with-DevOps/E-commerce.git
 COPY requirements.txt  requirements.txt
